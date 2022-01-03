@@ -9,6 +9,8 @@
 
 library(shiny)
 library(pixelart)
+library(magick)   # For image processing 
+library("colorspace")
 
 URL_404 <- "https://st.depositphotos.com/1561359/4961/v/950/depositphotos_49616865-stock-illustration-3d-illustration-of-error-404.jpg"
 
@@ -17,11 +19,18 @@ ui <- fluidPage(
   
   # Application title
   titlePanel("Make Pixel Art Models"),
+  #
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(width = 3,
+      radioButtons("input", "Input:",
+                             c("URL", "File upload"),
+                             inline = TRUE),
+                 
       textInput("url", label = "URL of picture:", "https://goo.gl/nRQi5n"),
+      
+      fileInput("file1", "Upload picture file: ", accept = c(".png", ".PNG", ".jpg", ".JPG")),
       
       textInput("color_bg", label = "Color for background:", "white"),
       
@@ -31,16 +40,16 @@ ui <- fluidPage(
       sliderInput("bottom", "Crop bottom (pixels)", value = 0, min = 0, max = 0),
       
       sliderInput("rotate", "Rotation (degrees)", value = 0, 
-                  min = 0, max = 360, step = 90),
-      
-      sliderInput("saturation", label = "Saturation:",
-                  min = 10, max = 300, value = 100, step = 10)
+                  min = 0, max = 360, step = 90)
     ),
     mainPanel(width = 9,
       fluidRow(
         column(6, 
                sliderInput("resize1", label = "Width of initial downsize:",
-                           min = 50, max = 300, value = 100, step = 10),
+                           min = 50, max = 200, value = 100, step = 10),
+               
+               sliderInput("saturation", label = "Saturation:",
+                           min = 10, max = 300, value = 100, step = 10),
                
                h2("Initial image"), h3("(reduced for processing)"),
                plotOutput("im1_plot"),
@@ -48,11 +57,10 @@ ui <- fluidPage(
                h4("Code to reproduce:"), verbatimTextOutput("code")
         ),
         column(6, 
-               sliderInput("ncolors", "Number of colors:",
-                           min = 2, max = 10, value = 7),
                sliderInput("resize2", label = "Width of final downsize:",
-                              min = 10, max = 80, value = 20, step = 2),
-               
+                           min = 10, max = 80, value = 20, step = 2),
+               sliderInput("ncolors", "Number of colors:",
+                           min = 2, max = 30, value = 7),
                h2("Pixel Art"), plotOutput("im2_plot"))
       )
     )
@@ -63,13 +71,23 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   im00 <- reactive({
+    if (input$input == "URL" | (is.null(input$input))){
+      path = input$url 
+    }
+    
+    if (input$input == "File upload"){
+      req(input$file1)
+      path = input$file1$datapath 
+    }
+    
     tryCatch(
       magick::image_background(
-        magick::image_read(input$url), 
+        magick::image_read(path), 
         input$color_bg
       ), 
       error = function(e) magick::image_read(URL_404)
     )
+    
   }) %>% 
     debounce(1000)
   
@@ -108,10 +126,6 @@ server <- function(input, output, session) {
   im2 <- reactive({
     downsize(im0(), input$resize2)
   })
-  
-  # output$im0_plot <- renderPlot({
-  #   plot(im0())
-  # })
   
   output$im1_plot <- renderPlot({
     plot(im1())
