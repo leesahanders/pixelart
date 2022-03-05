@@ -1,3 +1,9 @@
+This is a branch from: https://github.com/privefl/pixelart
+
+All credit to privefl for the awesome code. Small edits made here to allow users to upload an image and not just link to it. 
+
+
+
 [![Travis build status](https://travis-ci.org/privefl/pixelart.svg?branch=master)](https://travis-ci.org/privefl/pixelart)
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/privefl/pixelart?branch=master&svg=true)](https://ci.appveyor.com/project/privefl/pixelart)
 [![CRAN status](https://www.r-pkg.org/badges/version/pixelart)](https://cran.r-project.org/package=pixelart)
